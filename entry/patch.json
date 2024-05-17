@@ -1,0 +1,11 @@
+{
+  "app": {
+    "bundleName": "com.itheima.hm_guardian",
+    "patchVersionCode": 2000001,
+    "versionCode": 1000000
+  },
+  "module": {
+    "name": "entry",
+    "type": "hotreload"
+  }
+}

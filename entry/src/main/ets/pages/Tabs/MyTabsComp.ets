@@ -1,6 +1,9 @@
 import { router } from '@kit.ArkUI'
 import { LOGIN_INFO, LoginInfoResponse } from '../../common/constants'
-import { deviceInfo } from '@kit.BasicServicesKit'
+import { batteryInfo, deviceInfo } from '@kit.BasicServicesKit'
+import { hidebug } from '@kit.PerformanceAnalysisKit'
+import { appManager } from '@kit.AbilityKit'
+import { statfs } from '@kit.CoreFileKit'
 
 interface UsageItem {
   icon: Resource
@@ -15,7 +18,7 @@ export struct MyTabsComp {
   @StorageLink(LOGIN_INFO) loginInfo: LoginInfoResponse = {}
   @StorageLink('topHeight') topHeight: number = 0
   // @Provide 装饰器和 @Consume 装饰器：与后代组件双向同步
-  @Consume currentIndex: number
+  @Consume @Watch('onTabsChange') currentIndex: number
   @State deviceName: string = ''
   @State batteryState: number = 0
   @State memorySize: number = 0
@@ -24,11 +27,43 @@ export struct MyTabsComp {
 
   aboutToAppear() {
     this.getDeviceName()
+    this.getCpuUsage()
+    this.getAppMemorySize()
+    this.getStatfsSize()
+    this.getBatteryState()
+  }
+
+  // 标签变化时，数据刷新
+  onTabsChange() {
+    if (this.currentIndex === 2) {
+      this.getCpuUsage()
+      this.getAppMemorySize()
+      this.getStatfsSize()
+      this.getBatteryState()
+    }
   }
 
   // 获取设备名称，模拟器为emulator
   getDeviceName () {
     this.deviceName = deviceInfo.marketName
+  }
+  // 获取进程CPU占用率
+  getCpuUsage() {
+    this.cpuUsage = hidebug.getCpuUsage() * 100
+  }
+  // 获取应用内存大小
+  async getAppMemorySize() {
+    this.memorySize = await appManager.getAppMemorySize()
+  }
+  // 获取剩余存储
+  getStatfsSize() {
+    const context = getContext()
+    // 字节数转GB，1GB = 1000MB，1MB = 1000KB，1KB = 1000B
+    this.statfsFreeSize = statfs.getFreeSizeSync(context.filesDir) /(1000*1000*1000)
+  }
+  // 获取系统电量
+  getBatteryState() {
+    this.batteryState = batteryInfo.batterySOC
   }
 
   // 标题行
