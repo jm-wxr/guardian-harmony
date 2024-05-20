@@ -13,8 +13,32 @@
       "value": "label"
     },
     {
-      "name": "test",
-      "value": "test string"
+      "name": "permission_reason_camera",
+      "value": "Used for security scanning"
+    },
+    {
+      "name": "permission_reason_microphone",
+      "value": "Used for recording encrypted video and audio"
+    },
+    {
+      "name": "permission_reason_calendar",
+      "value": "Used for adding calendar"
+    },
+    {
+      "name": "permission_reason_contact",
+      "value": "Used to back up, restore, and optimize contacts"
+    },
+    {
+      "name": "permission_reason_imageVideo",
+      "value": "Used to help you slim down through photos and save space"
+    },
+    {
+      "name": "permission_reason_notification",
+      "value": "Used for security broadcasting and other notifications"
+    },
+    {
+      "name": "permission_reason_location",
+      "value": "Used to locate the guardian assistant"
     }
   ]
 }

@@ -39,10 +39,6 @@
     {
       "name": "permission_reason_location",
       "value": "位置授权原因"
-    },
-    {
-      "name": "test",
-      "value": "测试字段"
     }
   ]
 }

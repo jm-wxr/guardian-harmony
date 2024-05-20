@@ -13,8 +13,32 @@
       "value": "守护助手"
     },
     {
-      "name": "test",
-      "value": "用于添加日历，清理日程"
+      "name": "permission_reason_camera",
+      "value": "用于安全扫码等功能"
+    },
+    {
+      "name": "permission_reason_microphone",
+      "value": "用于录制加密视频和音频"
+    },
+    {
+      "name": "permission_reason_calendar",
+      "value": "用于添加日历"
+    },
+    {
+      "name": "permission_reason_contact",
+      "value": "用于通讯录备份、恢复、优化"
+    },
+    {
+      "name": "permission_reason_imageVideo",
+      "value": "用于帮您通过照片瘦身节省空间"
+    },
+    {
+      "name": "permission_reason_notification",
+      "value": "用于安全播报等通知"
+    },
+    {
+      "name": "permission_reason_location",
+      "value": "用于守护助手定位"
     }
   ]
 }

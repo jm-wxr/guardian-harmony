@@ -3,18 +3,18 @@ import { router } from '@kit.ArkUI'
 @Entry
 @Component
 struct TestIndexPage {
-
   build() {
     Navigation() {
-      Column({ space: 10 }) {
-        Button('/')
-          .onClick(() => {
-            router.pushUrl({ url: '/' })
-          })
+      Scroll() {
+        Column() {
+
+        }
+        .constraintSize({ minHeight: '100%' })
       }
+      .width('100%')
+      .height('100%')
     }
-    .title('测试页入口')
+    .title('')
     .titleMode(NavigationTitleMode.Mini)
-    .mode(NavigationMode.Stack)
   }
 }

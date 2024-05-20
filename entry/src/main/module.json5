@@ -19,8 +19,37 @@
       // 权限级别：normal (对所有应用开放)
       // 授权方式：user_grant (弹窗授权)
       {
+        // 日历
         "name": "ohos.permission.READ_CALENDAR",
-        "reason": "$string:test",
+        "reason": "$string:permission_reason_calendar",
+        "usedScene": {}
+      },
+      {
+        "name": "ohos.permission.WRITE_CALENDAR",
+        "reason": "$string:permission_reason_calendar",
+        "usedScene": {}
+      },
+      // 相机
+      {
+        "name": "ohos.permission.CAMERA",
+        "reason": '$string:permission_reason_camera',
+        "usedScene": {}
+      },
+      // 麦克风
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "reason": '$string:permission_reason_microphone',
+        "usedScene": {}
+      },
+      // 位置信息
+      {
+        "name": "ohos.permission.APPROXIMATELY_LOCATION",
+        "reason": '$string:permission_reason_location',
+        "usedScene": {}
+      },
+      {
+        "name": "ohos.permission.LOCATION",
+        "reason": '$string:permission_reason_location',
         "usedScene": {}
       }
     ],
