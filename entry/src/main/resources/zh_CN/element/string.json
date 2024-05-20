@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "守护助手"
+    },
+    {
+      "name": "test",
+      "value": "用于添加日历，清理日程"
     }
   ]
 }

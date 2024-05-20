@@ -11,8 +11,17 @@
     "installationFree": false,
     "pages": "$profile:main_pages",
     "requestPermissions": [
+      // 权限级别：normal (对所有应用开放)
+      // 授权方式：system_grant （直接授权）
       {
         "name": "ohos.permission.GET_NETWORK_INFO"
+      },
+      // 权限级别：normal (对所有应用开放)
+      // 授权方式：user_grant (弹窗授权)
+      {
+        "name": "ohos.permission.READ_CALENDAR",
+        "reason": "$string:test",
+        "usedScene": {}
       }
     ],
     "abilities": [
