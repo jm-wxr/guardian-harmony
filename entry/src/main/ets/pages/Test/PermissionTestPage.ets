@@ -67,7 +67,7 @@ struct PermissionTestPage {
                   alignment: DialogAlignment.Center,
                   buttons: [
                     { text: '取消', color: $r('app.color.font_sub') },
-                    { text: '去设置', color: $r('app.color.success') }
+                    { text: '去设置', color: $r('app.color.brand') }
                   ]
                 })
                 if (res.index === 1) {

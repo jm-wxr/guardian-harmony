@@ -1,6 +1,8 @@
 import { Permissions } from '@kit.AbilityKit';
+import { promptAction } from '@kit.ArkUI';
+import { notificationManager } from '@kit.NotificationKit';
 import { NavigationTitleBuilder } from '../../common/builders';
-import { themeManager } from '../../manager';
+import { permissionManager, themeManager } from '../../manager';
 
 interface PermissionItem {
   name: string
@@ -13,6 +15,7 @@ interface PermissionItem {
 @Entry
 @Component
 struct SettingsPermissionPage {
+  // 是否开启通知权限
   @State isNotificationEnabled: boolean = false
   @State permissionList: PermissionItem[] = [
     {
@@ -70,10 +73,86 @@ struct SettingsPermissionPage {
 
   onPageShow() {
     themeManager.settingStatusBarWhite()
+    this.updatePermission()
+    this.updatePermissionState()
   }
 
   onPageHide() {
     themeManager.settingStatusBarBlack()
+  }
+
+  // 关闭权限只能让用户去设置页关闭
+  async closePermission() {
+    const res = await promptAction.showDialog({
+      message: '建议开启全部权限，关闭后将导致应用部分功能失效',
+      buttons: [
+        { text: '取消', color: $r('app.color.brand') },
+        { text: '去设置中关闭', color: $r('app.color.danger') }
+      ]
+    })
+    if (res.index === 1) {
+      permissionManager.openPermissionSettingsPage()
+    }
+  }
+
+  // 开启权限
+  async openPermission(permissions: Permissions[]) {
+    try {
+      await permissionManager.requestPermissions(permissions)
+    } catch {
+      const res = await promptAction.showDialog({
+        alignment: DialogAlignment.Center,
+        message: '权限已禁用，是否去设置页开启',
+        buttons: [
+          { text: '取消', color: $r('app.color.font_sub') },
+          { text: '去开启', color: $r('app.color.brand') }
+        ]
+      })
+      if (res.index === 1) {
+        permissionManager.openPermissionSettingsPage()
+      }
+    } finally {
+      this.updatePermission()
+    }
+  }
+
+  // 更新权限
+  updatePermission() {
+    this.permissionList = this.permissionList.map(item => {
+      return {
+        name: item.name,
+        title: item.title,
+        desc: item.desc,
+        permissions: item.permissions,
+        timeStamp: Date.now()
+      } as PermissionItem
+    })
+  }
+
+  // 开启通知授权
+  async openNotificationPermission() {
+    try {
+      await notificationManager.requestEnableNotification()
+    } catch (err) {
+      const res = await promptAction.showDialog({
+        message: '去设置页开启通知权限',
+        alignment: DialogAlignment.Center,
+        buttons: [
+          { text: '取消', color: $r('app.color.font_sub') },
+          { text: '去设置', color: $r('app.color.brand') }
+        ]
+      })
+      if (res.index === 1) {
+        permissionManager.openPermissionSettingsPage()
+      }
+    } finally {
+      this.updatePermission()
+    }
+  }
+
+  // 更新通知权限
+  async updatePermissionState() {
+    this.isNotificationEnabled = await notificationManager.isNotificationEnabled()
   }
 
   build() {
@@ -103,15 +182,30 @@ struct SettingsPermissionPage {
 
 
             // 是否已开启权限
-            if (false) {
-              Text('已开启')
-                .fontSize(14)
-                .fontColor($r('app.color.brand'))
+            if (item.name === 'notification') {
+              if (this.isNotificationEnabled) {
+                Text('已开启')
+                  .fontSize(14)
+                  .fontColor($r('app.color.brand'))
+              } else {
+                Toggle({ type: ToggleType.Switch, isOn: false })
+                  .onChange(async () => {
+                    // TODO：更新所有权限授权状态
+                    this.openNotificationPermission()
+                  })
+              }
             } else {
-              Toggle({ type: ToggleType.Switch, isOn: false })
-                .onChange(async () => {
-                  // TODO：更新所有权限授权状态
-                })
+              if (permissionManager.checkPermissions(item.permissions)) {
+                Text('已开启')
+                  .fontSize(14)
+                  .fontColor($r('app.color.brand'))
+              } else {
+                Toggle({ type: ToggleType.Switch, isOn: false })
+                  .onChange(async () => {
+                    // TODO：更新所有权限授权状态
+                    this.openPermission(item.permissions)
+                  })
+              }
             }
           }
           .width('100%')
@@ -119,11 +213,12 @@ struct SettingsPermissionPage {
           .justifyContent(FlexAlign.SpaceBetween)
         })
         Button('关闭权限')
-          .fontColor($r('app.color.font_sub'))
+          .fontColor($r('app.color.danger'))
           .backgroundColor(Color.Transparent)
           .margin({ top: 20 })
           .onClick(() => {
             // TODO:关闭权限
+            this.closePermission()
           })
       }
       .width('100%')
