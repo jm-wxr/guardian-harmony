@@ -52,8 +52,9 @@ struct CleanerScanResultPage {
   // 获取剩余存储
   async getStatfsSize() {
     const context = getContext()
-    // 字节数转GB
+    // 获取剩余容量(硬盘)
     this.freeSize = statfs.getFreeSizeSync(context.filesDir)
+    // 获取总容量(硬盘)
     this.totalSize = statfs.getTotalSizeSync(context.filesDir)
   }
 

@@ -51,7 +51,30 @@
         "name": "ohos.permission.LOCATION",
         "reason": '$string:permission_reason_location',
         "usedScene": {}
-      }
+      },
+      // ----------- ACL 跨级别权限 system_basis 需要签名证书 -------------
+      // 通讯录
+      {
+        "name": "ohos.permission.READ_CONTACTS",
+        "reason": '$string:permission_reason_contact',
+        "usedScene": {}
+      },
+      {
+        "name": "ohos.permission.WRITE_CONTACTS",
+        "reason": '$string:permission_reason_contact',
+        "usedScene": {}
+      },
+      // 照片
+      {
+        "name": "ohos.permission.READ_IMAGEVIDEO",
+        "reason": "$string:permission_reason_imageVideo",
+        "usedScene": {}
+      },
+      {
+        "name": "ohos.permission.WRITE_IMAGEVIDEO",
+        "reason": "$string:permission_reason_imageVideo",
+        "usedScene": {}
+      },
     ],
     "abilities": [
       {
