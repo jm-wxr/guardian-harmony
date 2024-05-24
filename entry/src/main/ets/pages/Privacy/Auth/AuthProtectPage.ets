@@ -1,5 +1,7 @@
 // DONE: 未输入内容时，点击下一步，输入框的 placeholder 文案抖动
+import { promptAction, router } from '@kit.ArkUI';
 import { PRIVACY_QUESTION_LIST, PRIVACY_SETTINGS, PrivacySettings } from '../../../common/constants';
+import { encryptMD5 } from '../../../common/utils';
 
 interface RouterParams {
   patternPassword?: number[]
@@ -18,8 +20,24 @@ struct AuthProtect {
   @State errorMessage: string = ''
   // 空状态，输入框抖动效果
   @State inputPaddingLeft: number = 10
-  // 路由参数
-  @State routerParams: RouterParams = {}
+  // 路由参数，密码
+  routerParam: RouterParams = router.getParams() as RouterParams
+
+  // 持久化存储密码和问题
+  savePassword() {
+    if (this.routerParam?.patternPassword) {
+      this.privacySettings.patternPassword = encryptMD5(this.routerParam.patternPassword.toString())
+    }
+    this.privacySettings.protectQuestionIndex = this.activeIndex
+    this.privacySettings.protectQuestionAnswer = encryptMD5(this.answerText)
+    promptAction.showToast({ message: '修改成功' })
+    // 是否有路由参数，有表示首次设置密保问题,没有表示修改密保问题
+    if (this.routerParam?.patternPassword) {
+      router.pushUrl({ url: 'pages/Privacy/PrivacyIndexPage' })
+    } else {
+      router.replaceUrl({ url: 'pages/Privacy/PrivacyIndexPage' })
+    }
+  }
 
   @Builder
   NavigationMenus() {
@@ -29,6 +47,7 @@ struct AuthProtect {
         .fontColor($r('app.color.font'))
         .onClick(() => {
           // TODO：完成
+          this.savePassword()
         })
     }
     .height('100%')
@@ -76,6 +95,7 @@ struct AuthProtect {
               .padding(0)
               .onSubmit(() => {
                 // TODO：提交密保问题答案
+                this.savePassword()
               })
           }
           .border({ width: { bottom: 1 }, color: $r('app.color.border'), radius: 0 })

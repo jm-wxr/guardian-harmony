@@ -14,7 +14,12 @@
       // 权限级别：normal (对所有应用开放)
       // 授权方式：system_grant （直接授权）
       {
+        // 获取网络信息
         "name": "ohos.permission.GET_NETWORK_INFO"
+      },
+      {
+        // 获取生物特征(指纹、面容ID等)
+        "name": "ohos.permission.ACCESS_BIOMETRIC"
       },
       // 权限级别：normal (对所有应用开放)
       // 授权方式：user_grant (弹窗授权)

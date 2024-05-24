@@ -1,4 +1,6 @@
+import { router } from '@kit.ArkUI'
 import { PRIVACY_QUESTION_LIST, PRIVACY_SETTINGS, PrivacySettings } from '../../../common/constants'
+import { encryptMD5 } from '../../../common/utils'
 
 @Entry
 @Component
@@ -12,6 +14,32 @@ struct ForgetPasswordPage {
   // 空状态，输入框抖动效果
   @State inputPaddingLeft: number = 10
 
+  setErrorMessage(message: string) {
+    this.errorMessage = message
+    this.inputPaddingLeft = 14 // 抖动效果
+  }
+
+  clearErrorMessage() {
+    this.errorMessage = ''
+  }
+
+  // 提交表单
+  onSubmit() {
+    if (this.answerText.trim() === '') {
+      this.setErrorMessage('请填写问题答案')
+    } else {
+      if (this.privacySettings.protectQuestionAnswer === encryptMD5(this.answerText)) {
+        this.clearErrorMessage()
+        router.pushUrl({
+          url: 'pages/Privacy/Auth/AuthPatternLockSettingsPage',
+          params: { isForgetPassword: true }
+        })
+      } else {
+        this.setErrorMessage('您输入的密保问题答案不正确')
+      }
+    }
+  }
+
   @Builder
   NavigationMenus() {
     Row() {
@@ -20,6 +48,7 @@ struct ForgetPasswordPage {
         .fontColor($r('app.color.font'))
         .onClick(() => {
           // TODO：下一步
+          this.onSubmit()
         })
     }
     .height('100%')
@@ -28,9 +57,6 @@ struct ForgetPasswordPage {
 
   build() {
     Navigation() {
-      Column() {
-        Text('测试数据：' + JSON.stringify(this.privacySettings))
-      }
 
       Column() {
         Text('重置密码')
@@ -50,7 +76,7 @@ struct ForgetPasswordPage {
             .height(56)
             .border({ width: { bottom: 1 }, color: $r('app.color.border'), radius: 0 })
           Row() {
-            TextInput({ placeholder: '密保问题答案', text: this.answerText })
+            TextInput({ placeholder: '密保问题答案', text: $$this.answerText })
               .cancelButton({
                 style: CancelButtonStyle.INPUT, // 输入时显示清空按钮
                 icon: { src: $r('app.media.ic_public_cancel_button') }  // 设置右侧清除按钮样式
@@ -60,11 +86,9 @@ struct ForgetPasswordPage {
               .padding(0)
               .width('100%')
               .height(56)
-              .onChange((text) => {
-                this.answerText = text
-              })
               .onSubmit(() => {
                 // TODO：提交密保问题答案
+                this.onSubmit()
               })
           }
           .border({ width: { bottom: 1 }, color: $r('app.color.border'), radius: 0 })
