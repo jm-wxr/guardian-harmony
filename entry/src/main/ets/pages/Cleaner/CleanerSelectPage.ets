@@ -1,18 +1,21 @@
+import { promptAction, router } from '@kit.ArkUI'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
 import { NavigationTitleBuilder } from '../../common/builders'
-import { formatByteLength } from '../../common/utils'
-import { themeManager } from '../../manager'
+import { cleanerManager, themeManager } from '../../manager'
 
 interface RouterParams {
   name: string
 }
+
+const MEGA_BYTE = 1000 * 1000
 
 @Entry
 @Component
 struct CleanerSelectPage {
   @State routerParams: RouterParams | null = null
   @State list: photoAccessHelper.PhotoAsset[] = []
-  @State selectedNames: string[] = []
+  @State @Watch('onSelectChange') selectedNames: string[] = []
+  @State selectedList: photoAccessHelper.PhotoAsset[] = []
   @State selectedSize: number = 0
 
   onPageShow() {
@@ -23,13 +26,43 @@ struct CleanerSelectPage {
     themeManager.settingStatusBarBlack()
   }
 
+  aboutToAppear(): void {
+    const params = router.getParams() as RouterParams
+    if (params) {
+      this.routerParams = params
+      this.getList()
+    }
+  }
+
+  async getList() {
+    if (this.routerParams?.name === '屏幕截图') {
+      this.list = await cleanerManager.getScreenshotList()
+    } else if (this.routerParams?.name === '视频文件') {
+      this.list = await cleanerManager.getVideoList()
+    }
+  }
+
+  onSelectChange() {
+    this.selectedList = this.list.filter(item => this.selectedNames.includes(item.uri))
+    this.selectedSize = this.selectedList.reduce((pre, curr) => {
+      return pre + (curr.get(photoAccessHelper.PhotoKeys.SIZE) as number)
+    }, 0)
+  }
+
+  async deletePhotos() {
+    const delRes = await cleanerManager.deleteAssets(this.selectedNames)
+    promptAction.showToast({ message: delRes ? '删除成功' : '取消删除' })
+    this.getList()
+  }
+
   build() {
     Navigation() {
       Column() {
         Column({ space: 10 }) {
           Text() {
             Span('可节省')
-            Span(formatByteLength(this.selectedSize))
+            Span((this.selectedSize / MEGA_BYTE).toFixed(1))
+            Span('MB')
           }
           .fontSize(16)
           .fontColor($r('app.color.white'))
@@ -99,8 +132,9 @@ struct CleanerSelectPage {
           .layoutWeight(1)
           .height(42)
           .backgroundColor($r('app.color.danger'))
-          .onClick(() => {
+          .onClick(async () => {
             // TODO：删除选中图片
+            this.deletePhotos()
           })
       }
       .border({ width: { top: 1 }, color: $r('app.color.border') })

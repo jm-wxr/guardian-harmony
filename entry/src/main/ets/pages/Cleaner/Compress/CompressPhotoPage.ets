@@ -1,7 +1,8 @@
+import { promptAction } from '@kit.ArkUI'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
 import { NavigationTitleBuilder } from '../../../common/builders'
 import { formatByteLength } from '../../../common/utils'
-import { themeManager } from '../../../manager'
+import { cleanerManager, themeManager } from '../../../manager'
 
 @Entry
 @Component
@@ -12,6 +13,7 @@ struct CompressPhotoIndexPage {
 
   onPageShow() {
     themeManager.settingStatusBarWhite()
+    this.getList()
   }
 
   onPageHide() {
@@ -19,6 +21,30 @@ struct CompressPhotoIndexPage {
   }
 
   // TODO：立即瘦身（压缩照片）
+  async getList() {
+    this.list = await cleanerManager.getLargeSizeList()
+  }
+
+  // 立即瘦身
+  async startCompress() {
+    const promiseTasks = this.selectedName.map(async item => {
+      return await cleanerManager.compressPhoto(item)
+    })
+    await Promise.all(promiseTasks)
+    const res = await promptAction.showDialog({
+      alignment: DialogAlignment.Center,
+      title: '瘦身成功',
+      message: `成功压缩${this.selectedName.length}张图片，是否删除原图`,
+      buttons: [
+        { text: '取消', color: '#999' },
+        { text: '确定', color: $r('sys.color.ohos_id_color_primary') }
+      ]
+    })
+    if (res.index === 1) {
+      await cleanerManager.deleteAssets(this.selectedName)
+      this.getList()
+    }
+  }
 
   build() {
     Navigation() {
@@ -116,6 +142,7 @@ struct CompressPhotoIndexPage {
             .enabled(this.selectedName.length > 0)
             .onClick(() => {
               // TODO：立即瘦身（压缩照片）
+              this.startCompress()
             })
         }
         .width('100%')
