@@ -1,6 +1,7 @@
 import { router } from '@kit.ArkUI'
 import { PRIVACY_SETTINGS, PrivacySettings } from '../../../common/constants'
 import { encryptMD5 } from '../../../common/utils'
+import { userAuthManager } from '../../../manager'
 
 @Entry
 @Component
@@ -15,6 +16,10 @@ struct AuthPatternLockPage {
   @State isEnable: boolean = true
   // 图形密码控制器
   private patternLockController: PatternLockController = new PatternLockController()
+
+  onPageShow(): void {
+    this.startUserAuth()
+  }
 
   // 设置错误提示
   setErrorMessage(message: string) {
@@ -40,6 +45,20 @@ struct AuthPatternLockPage {
         router.pushUrl({ url: 'pages/Privacy/PrivacyIndexPage' })
       } else {
         this.setErrorMessage('手势密码不正确，请重新绘制')
+      }
+    }
+  }
+
+  // 用户身份识别
+  async startUserAuth() {
+    // 检查是否已经开启了用户身份认证
+    if (this.privacySettings.isOpenUserAuthLock) {
+      // 用户认证
+      if (await userAuthManager.startUserAuth()) {
+        // 认证成功，跳转到隐私空间
+        router.replaceUrl({ url: 'pages/Privacy/PrivacyIndexPage' })
+      } else if (this.privacySettings.isOpenAntiCracking) {
+        // TODO: 防破解，超过 3 次锁定 1 分钟
       }
     }
   }

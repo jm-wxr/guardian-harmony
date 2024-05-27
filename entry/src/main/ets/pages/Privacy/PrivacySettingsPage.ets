@@ -1,7 +1,8 @@
-import { router } from '@kit.ArkUI'
+import { promptAction, router } from '@kit.ArkUI'
 import { CellRowArrowComp, CellRowSwitchComp, DividerComp, TitleDividerComp } from '../../common/components'
 import { PRIVACY_SETTINGS, PrivacySettings } from '../../common/constants'
 import { showDevelopingTips } from '../../common/dev'
+import { userAuthManager } from '../../manager'
 
 interface Item {
   icon: ResourceStr
@@ -10,13 +11,15 @@ interface Item {
   url: string
 }
 
+
 @Entry
 @Component
 struct PrivacySettingsPage {
-  // 获取隐私空间设置
-  @StorageLink(PRIVACY_SETTINGS) privacySettings: PrivacySettings = {}
-  @State isOpenUserAuthLock: boolean = false
-  @State isOpenAntiCracking: boolean = false
+  @StorageLink(PRIVACY_SETTINGS) privacySettings: PrivacySettings = {} // 获取隐私空间设置
+  @State @Watch('authLockChange') isOpenUserAuthLock: boolean =
+    this.privacySettings.isOpenUserAuthLock ?? false // 指纹或面容解锁
+  @State @Watch('antiCrackingChange') isOpenAntiCracking: boolean =
+    this.privacySettings.isOpenAntiCracking ?? false // 防破解
   @State list: Item[] = [
     {
       icon: $r('app.media.ic_recorder'),
@@ -37,6 +40,26 @@ struct PrivacySettingsPage {
       url: 'pages/Privacy/Codebook/CodebookIndexPage'
     },
   ]
+
+  // 设置改变时执行
+  authLockChange() {
+    if (this.isOpenUserAuthLock) {
+      // 如果开启用户认证
+      if (!userAuthManager.checkUserAuthSupport()) {
+        // 如果不支持用户身份认证
+        promptAction.showToast({ message: '用户未录入认证信息，请在设置页添加' })
+        this.isOpenUserAuthLock = false
+      } else {
+        // 如果支持
+        this.isOpenUserAuthLock = this.isOpenUserAuthLock
+      }
+    }
+    this.privacySettings.isOpenUserAuthLock = this.isOpenUserAuthLock
+  }
+
+  antiCrackingChange() {
+    this.privacySettings.isOpenAntiCracking = this.isOpenAntiCracking
+  }
 
   build() {
     Navigation() {
