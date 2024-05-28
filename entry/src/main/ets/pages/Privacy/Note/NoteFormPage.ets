@@ -3,7 +3,7 @@ import { common } from '@kit.AbilityKit'
 import { uniformTypeDescriptor } from '@kit.ArkData'
 import { promptAction, router } from '@kit.ArkUI'
 import { systemShare } from '@kit.ShareKit'
-import { privacyNoteDB, PrivacyNoteDBInfo } from '../../../manager'
+import { privacyNoteDB, PrivacyNoteDBInfo } from '../../../database/PrivacyDB'
 
 interface RouterParams {
   id?: number

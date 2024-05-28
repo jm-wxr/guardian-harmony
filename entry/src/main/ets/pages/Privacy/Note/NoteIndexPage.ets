@@ -1,4 +1,4 @@
-import { router } from '@kit.ArkUI'
+import { promptAction, router } from '@kit.ArkUI'
 import dayjs from 'dayjs'
 import { EmptyTipsComp } from '../../../common/components'
 import { privacyNoteDB, PrivacyNoteDBInfo } from '../../../database/PrivacyDB'
@@ -21,6 +21,7 @@ struct NoteIndexPage {
   // 删除数据
   async deleteData(id: number) {
     await privacyNoteDB.delete(id)
+    promptAction.showToast({ message: '删除成功' })
     this.getData()
   }
 
@@ -33,7 +34,6 @@ struct NoteIndexPage {
         .aspectRatio(1)
         .backgroundColor('#FF5E5D')
         .onClick(() => {
-          // TODO：删除
           this.deleteData(id)
         })
     }
@@ -83,6 +83,9 @@ struct NoteIndexPage {
                   end: {
                     builder: () => {
                       this.swipeActionEnd(item.id)
+                    },
+                    onAction: () => {
+                      this.deleteData(item.id)
                     },
                     actionAreaDistance: 56,
                   },
