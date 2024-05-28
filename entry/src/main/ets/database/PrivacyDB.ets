@@ -9,15 +9,61 @@ export interface PrivacyNoteDBInfo extends ValuesBucket {
   date_added: number
 }
 
-class PrivacyNoteDB {
-  private tableName = 'PRIVACY_NOTE'
-  private sqlCreate = `
-  CREATE TABLE IF NOT EXISTS ${this.tableName} (
+const noteSqlCreate = `
+  CREATE TABLE IF NOT EXISTS PRIVACY_NOTE (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     date_added INTEGER NOT NULL
   )`
+const pushNoteData = (list: PrivacyNoteDBInfo[], resultSet: relationalStore.ResultSet) => {
+  list.push({
+    id: resultSet.getLong(0),
+    title: resultSet.getString(1),
+    content: resultSet.getString(2),
+    date_added: resultSet.getLong(3)
+  })
+}
+
+// 隐私录音的字段
+export interface PrivacyRecorderDBInfo extends ValuesBucket {
+  id: number | null // 新增时 id 为 null ，自动生成自增 id
+  filePath: string
+  title: string
+  date_added: number
+  duration: number
+}
+
+const recorderSqlCreate =
+  `CREATE TABLE IF NOT EXISTS PRIVACY_RECORDER (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filePath TEXT,
+    title TEXT,
+    date_added INTEGER,
+    duration INTEGER
+  )`
+const pushRecorderData = (list: PrivacyRecorderDBInfo[], resultSet: relationalStore.ResultSet) => {
+  list.push({
+    id: resultSet.getLong(resultSet.getColumnIndex('id')),
+    filePath: resultSet.getString(resultSet.getColumnIndex('filePath')),
+    title: resultSet.getString(resultSet.getColumnIndex('title')),
+    date_added: resultSet.getLong(resultSet.getColumnIndex('date_added')),
+    duration: resultSet.getLong(resultSet.getColumnIndex('duration')),
+  })
+}
+
+class PrivacyDB <T extends ValuesBucket> {
+  private tableName: string // 表名
+  private sqlCreate: string // sql 创建语句
+  private pushData: (list: T[], resultSet: relationalStore.ResultSet) => void
+
+  // 构造函数
+  constructor(tableName: string, sqlCreate: string,
+    pushData: (list: T[], resultSet: relationalStore.ResultSet) => void) {
+    this.tableName = tableName
+    this.sqlCreate = sqlCreate
+    this.pushData = pushData
+  }
 
   // 获取数据库
   async getStoreInstance() {
@@ -58,7 +104,7 @@ class PrivacyNoteDB {
   }
 
   // 新增数据
-  async insert(item: PrivacyNoteDBInfo) {
+  async insert(item: T) {
     const store = await this.getStoreInstance()
     const rowId = await store.insert(this.tableName, item)
     return rowId > 0 ? Promise.resolve(rowId) : Promise.reject('insert error')
@@ -85,16 +131,11 @@ class PrivacyNoteDB {
       predicates.equalTo('id', id)
     }
     const resultSet = await store.query(predicates)
-    const list: PrivacyNoteDBInfo[] = []
+    const list: T[] = []
     // 遍历结果集
     while (resultSet.goToNextRow()) {
       // 将数据追加到数组
-      list.push({
-        id: resultSet.getLong(0),
-        title: resultSet.getString(1),
-        content: resultSet.getString(2),
-        date_added: resultSet.getLong(3)
-      })
+      this.pushData(list, resultSet)
     }
     // 释放结果集的内存空间
     resultSet.close()
@@ -112,7 +153,7 @@ class PrivacyNoteDB {
   }
 
   // 更新数据
-  async update(item: PrivacyNoteDBInfo) {
+  async update(item: T) {
     if (!item.id) {
       return Promise.reject('id error')
     }
@@ -124,4 +165,8 @@ class PrivacyNoteDB {
   }
 }
 
-export const privacyNoteDB = new PrivacyNoteDB()
+
+export const privacyNoteDB = new PrivacyDB<PrivacyNoteDBInfo>('PRIVACY_NOTE', noteSqlCreate, pushNoteData)
+
+export const privacyRecorderDB =
+  new PrivacyDB<PrivacyRecorderDBInfo>('PRIVACY_RECORDER', recorderSqlCreate, pushRecorderData)

@@ -8,4 +8,4 @@ export * from './UserCalendarManager'
 
 export * from './UserAuthManager'
 
-export * from './PrivacynoteDB'
+export * from './AudioCaptureManager'

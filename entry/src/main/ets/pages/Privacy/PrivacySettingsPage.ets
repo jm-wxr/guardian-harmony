@@ -2,6 +2,7 @@ import { promptAction, router } from '@kit.ArkUI'
 import { CellRowArrowComp, CellRowSwitchComp, DividerComp, TitleDividerComp } from '../../common/components'
 import { PRIVACY_SETTINGS, PrivacySettings } from '../../common/constants'
 import { showDevelopingTips } from '../../common/dev'
+import { privacyNoteDB } from '../../database/PrivacyDB'
 import { userAuthManager } from '../../manager'
 
 interface Item {
@@ -40,6 +41,20 @@ struct PrivacySettingsPage {
       url: 'pages/Privacy/Codebook/CodebookIndexPage'
     },
   ]
+
+  onPageShow(): void {
+    this.getNoteCount()
+  }
+
+  // 获取笔记数量
+  async getNoteCount() {
+    this.list[1] = {
+      icon: $r('app.media.ic_notebook'),
+      name: '笔记',
+      count: await privacyNoteDB.queryCount(),
+      url: 'pages/Privacy/Note/NoteIndexPage'
+    }
+  }
 
   // 设置改变时执行
   authLockChange() {
