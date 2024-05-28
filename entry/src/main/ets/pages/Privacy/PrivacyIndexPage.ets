@@ -139,7 +139,6 @@ struct PrivacyIndexPage {
           .divider({ strokeWidth: 1, color: $r('app.color.border'), startMargin: 84 + 15 })
           .height('100%')
           .width('100%')
-
         }
 
         // 底部固定区域

@@ -44,6 +44,7 @@
     "pages/Guard/Outdoor/GuardPolicePage",
     "pages/Test/PermissionTestPage",
     "pages/Test/MediaLibraryKitTestPage",
-    "pages/Test/UserAuthTestPage"
+    "pages/Test/UserAuthTestPage",
+    "pages/Test/RdbStoreTestPage"
   ]
 }

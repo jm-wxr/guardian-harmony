@@ -1,20 +1,28 @@
 import { router } from '@kit.ArkUI'
 import dayjs from 'dayjs'
 import { EmptyTipsComp } from '../../../common/components'
-
-// 隐私笔记
-interface NoteItem {
-  id: number | null
-  title: string
-  content: string
-  date_added: number
-}
+import { privacyNoteDB, PrivacyNoteDBInfo } from '../../../manager'
 
 @Entry
 @Component
 struct NoteIndexPage {
   // 笔记列表
-  @State list: NoteItem[] = []
+  @State list: PrivacyNoteDBInfo[] = []
+
+  onPageShow(): void {
+    this.getData()
+  }
+
+  // 获取数据库数据
+  async getData() {
+    this.list = await privacyNoteDB.query()
+  }
+
+  // 删除数据
+  async deleteData(id: number) {
+    await privacyNoteDB.delete(id)
+    this.getData()
+  }
 
   @Builder
   swipeActionEnd(id: number) {
@@ -26,6 +34,7 @@ struct NoteIndexPage {
         .backgroundColor('#FF5E5D')
         .onClick(() => {
           // TODO：删除
+          this.deleteData(id)
         })
     }
     .height('100%')
@@ -38,7 +47,7 @@ struct NoteIndexPage {
         if (this.list.length) {
           Column() {
             List() {
-              ForEach(this.list, (item: NoteItem) => {
+              ForEach(this.list, (item: PrivacyNoteDBInfo) => {
                 ListItem() {
                   Row() {
                     Column() {
@@ -72,11 +81,8 @@ struct NoteIndexPage {
                 .transition({ type: TransitionType.Delete, opacity: 0 })
                 .swipeAction({
                   end: {
-                    builder: () => { this.swipeActionEnd(item.id) },
-                    onAction: () => {
-                      animateTo({ duration: 1000 }, () => {
-                        // TODO：侧滑删除
-                      })
+                    builder: () => {
+                      this.swipeActionEnd(item.id)
                     },
                     actionAreaDistance: 56,
                   },

@@ -1,7 +1,7 @@
 import { router } from '@kit.ArkUI'
 import { calendarManager } from '@kit.CalendarKit'
 import { NavigationTitleBuilder } from '../../common/builders'
-import { themeManager } from '../../manager'
+import { themeManager, userCalendarManager } from '../../manager'
 
 @Entry
 @Component
@@ -13,6 +13,7 @@ struct CalendarIndexPage {
 
   onPageShow() {
     themeManager.settingStatusBarWhite()
+    userCalendarManager.requestPermissions()
   }
 
   onPageHide() {
