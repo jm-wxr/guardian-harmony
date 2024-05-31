@@ -9,3 +9,5 @@ export * from './UserCalendarManager'
 export * from './UserAuthManager'
 
 export * from './AudioCaptureManager'
+
+export * from './AudioRenderManager'

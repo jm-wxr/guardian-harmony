@@ -1,32 +1,29 @@
-import { ValuesBucket } from '@kit.ArkData'
+import { promptAction } from '@kit.ArkUI'
+import { fileIo } from '@kit.CoreFileKit'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import { EmptyTipsComp } from '../../../common/components'
+import { PRIVACY_RECORDER_FOLDER } from '../../../common/constants'
+import { isEmulator } from '../../../common/dev'
 import { CustomInputDialog } from '../../../common/dialog'
+import { privacyRecorderDB, PrivacyRecorderDBInfo } from '../../../database/PrivacyDB'
+import { audioCaptureManager, audioRenderManager } from '../../../manager'
 
 // 用于把毫秒格式化成 mm:ss 的相对时间插件
 dayjs.extend(duration)
 
-// 注意：隐私录音的数据库准备完毕后，请删除这个类型，否者类型可能会冲突
-export interface PrivacyRecorderDBInfo extends ValuesBucket {
-  id: number | null // 新增时 id 为 null ，自动生成自增 id
-  filePath: string
-  title: string
-  date_added: number
-  duration: number
-}
-
 @Entry
 @Component
 struct RecorderIndexPage {
-  @State list: PrivacyRecorderDBInfo[] = []
-  @State tempInputText: string = ''
+  @State list: PrivacyRecorderDBInfo[] = [] // 录音文件列表
+  @State tempInputText: string = '' // 绑定弹窗的输入框内容
   @State onConfirmEnable: boolean = true
-  @State activeItem: PrivacyRecorderDBInfo | null = null
-  @State isRecording: boolean = false
-  @State isPlaying: boolean = false
-  @State recordingTime: number = 0
-  @State playingTime: number = 0
+  @State activeItem: PrivacyRecorderDBInfo | null = null // 播放/重命名的录音
+  @State isRecording: boolean = false // 是否正在录音
+  @State isPlaying: boolean = false // 是否正在播放
+  @State recordingTime: number = 0 // 录音计时，单位：s
+  @State playingTime: number = 0 // 当前播放时间，单位：ms
+  private filePath: string = '' // 模拟器临时使用的录音文件路径变量
   // 自定义弹窗层
   dialogController: CustomDialogController = new CustomDialogController({
     builder: CustomInputDialog({
@@ -35,6 +32,7 @@ struct RecorderIndexPage {
       inputText: this.tempInputText,
       onConfirm: async () => {
         // TODO：重命名录音
+        this.renameRecord()
       },
     }),
     autoCancel: true,
@@ -43,6 +41,141 @@ struct RecorderIndexPage {
   })
   private playingTimerId: number = -1
   private recordingTimerId: number = -1
+
+  async aboutToAppear() {
+    // 开启录音权限
+    await audioCaptureManager.requestPermissions()
+    // 初始化文件夹
+    this.initFolder()
+    // 获取录音列表
+    this.getList()
+  }
+
+  async getList() {
+    this.list = await privacyRecorderDB.query()
+  }
+
+  // 初始化隐私录音的文件夹
+  initFolder() {
+    const context = getContext()
+    // 获取沙箱目录
+    const filesDir = context.filesDir
+    // 列出沙箱目录下的所有文件(文件夹)
+    const list = fileIo.listFileSync(filesDir)
+    // 如果没有隐私目录，就新建一个
+    if (!list.includes(PRIVACY_RECORDER_FOLDER)) {
+      fileIo.mkdirSync(filesDir + '/' + PRIVACY_RECORDER_FOLDER)
+    }
+  }
+
+  // 开始录音
+  async startRecorder() {
+    this.isRecording = true
+    // 开启计时效果
+    this.recordingTime = 0 // 初始化秒数
+    clearInterval(this.recordingTimerId)
+    this.recordingTimerId = setInterval(() => {
+      this.recordingTime++
+    }, 1000)
+    const context = getContext()
+    const filePath = context.filesDir + '/' + PRIVACY_RECORDER_FOLDER + '/' + Date.now() + '.wav'
+    this.filePath = filePath
+    await audioCaptureManager.startRecorder(filePath)
+  }
+
+  // 结束录音
+  async stopRecorder() {
+    this.isRecording = false
+    // 结束计时效果
+    clearInterval(this.recordingTimerId)
+    if (!isEmulator()) {
+      // 只有真机可以调用
+      const audioInfo = await audioCaptureManager.stopRecorder()
+      await privacyRecorderDB.insert({
+        id: null,
+        filePath: audioInfo.filePath,
+        title: '录音文件' + dayjs(audioInfo.date_added).format('YYYY-MM-DD HH:mm:ss'),
+        date_added: audioInfo.date_added,
+        duration: audioInfo.duration
+      })
+    } else {
+      await privacyRecorderDB.insert({
+        id: null,
+        filePath: this.filePath,
+        title: '模拟器测试文件 ' + dayjs()
+          .format('YYYY-MM-DD HH:mm:ss'),
+        date_added: Date.now(),
+        duration: this.recordingTime * 1000 // 毫秒，进度条播放时更丝滑
+      })
+    }
+    await this.getList()
+  }
+
+  // 播放录音
+  playRecorder(item: PrivacyRecorderDBInfo) {
+    this.activeItem = item
+    if (!this.isPlaying) {
+      this.isPlaying = true // 开始播放动画
+      this.playingTime = 0 // 初始化播放时间的值
+      const interval = 20 // 更新间隔，单位：ms
+      clearInterval(this.playingTimerId)
+      this.playingTimerId = setInterval(() => {
+        this.playingTime += interval
+        if (this.playingTime > item.duration) {
+          this.stopPlayRecorder()
+        }
+      }, interval)
+      audioRenderManager.startRenderer(item.filePath)
+    } else {
+      this.stopPlayRecorder()
+      this.playRecorder(item)
+    }
+  }
+
+  // 停止播放录音
+  stopPlayRecorder() {
+    this.isPlaying = false
+    clearInterval(this.playingTimerId)
+    audioRenderManager.stopRenderer()
+  }
+
+  // 删除录音
+  async deleteRecord(item: PrivacyRecorderDBInfo) {
+    if (item.id) {
+      try {
+        // 停止播放录音
+        this.stopPlayRecorder()
+        // 删除数据库中的数据
+        await privacyRecorderDB.delete(item.id)
+        // 更新列表
+        await this.getList()
+        // 删除沙箱文件
+        fileIo.unlinkSync(item.filePath)
+      } catch (err) {
+        console.error('myLog:', JSON.stringify(err, null, 2))
+      }
+    }
+  }
+
+  // 打开重命名弹窗
+  async openRenameDialog() {
+    if (this.activeItem) {
+      this.tempInputText = this.activeItem.title
+      this.dialogController.open()
+    }
+  }
+
+  // 重命名录音
+  async renameRecord() {
+    if (this.activeItem) {
+      if (!this.tempInputText.trim()) {
+        return promptAction.showToast({ message: '音频名字不能为空' })
+      }
+      this.activeItem.title = this.tempInputText
+      await privacyRecorderDB.update(this.activeItem)
+      this.getList()
+    }
+  }
 
   @Builder
   NavigationMenus() {
@@ -59,7 +192,7 @@ struct RecorderIndexPage {
   }
 
   @Builder
-  ListItemSwipeActionEnd() {
+  ListItemSwipeActionEnd(item: PrivacyRecorderDBInfo) {
     Row() {
       Button("重命名")
         .type(ButtonType.Normal)
@@ -67,7 +200,8 @@ struct RecorderIndexPage {
         .aspectRatio(1)
         .backgroundColor('#CECFCF')
         .onClick(() => {
-          // TODO：录音重命名
+          // TODO：打开录音重命名弹窗
+          this.openRenameDialog()
         })
       Button("删除")
         .type(ButtonType.Normal)
@@ -76,6 +210,7 @@ struct RecorderIndexPage {
         .backgroundColor('#FF5E5D')
         .onClick(() => {
           // TODO：删除录音
+          this.deleteRecord(item)
         })
     }
     .height('100%')
@@ -138,6 +273,7 @@ struct RecorderIndexPage {
                       .height('100%')
                       .onClick(() => {
                         // TODO：播放音频
+                        this.playRecorder(item)
                       })
                     }
                     .width('100%')
@@ -148,7 +284,7 @@ struct RecorderIndexPage {
                   .transition({ type: TransitionType.Delete, opacity: 0 })
                   .swipeAction({
                     end: {
-                      builder: this.ListItemSwipeActionEnd(),
+                      builder: this.ListItemSwipeActionEnd(item),
                       onStateChange: (state) => {
                         if (state === SwipeActionState.EXPANDED) {
                           // 保存当前滑动的数据
@@ -184,6 +320,7 @@ struct RecorderIndexPage {
             .aspectRatio(1)
             .onClick(() => {
               // TODO：开始录音
+              this.startRecorder()
             })
         }
         .width('100%')
@@ -228,8 +365,8 @@ struct RecorderIndexPage {
           .margin({ top: 40 })
 
           Text(
-            dayjs(this.recordingTime)
-              .format(this.recordingTime > 1000 * 60 * 60 ? 'HH:mm:ss' : 'mm:ss')
+            dayjs.duration(this.recordingTime, 'seconds')
+              .format(this.recordingTime > 60 * 60 ? 'HH:mm:ss' : 'mm:ss')
           )
             .fontSize(18)
             .lineHeight(25)
@@ -245,6 +382,7 @@ struct RecorderIndexPage {
               .borderRadius(10)
               .onClick(() => {
                 // TODO：停止录音
+                this.stopRecorder()
               })
           }
           .padding({ left: 15, right: 15 })

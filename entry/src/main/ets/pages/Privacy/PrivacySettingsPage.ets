@@ -2,7 +2,7 @@ import { promptAction, router } from '@kit.ArkUI'
 import { CellRowArrowComp, CellRowSwitchComp, DividerComp, TitleDividerComp } from '../../common/components'
 import { PRIVACY_SETTINGS, PrivacySettings } from '../../common/constants'
 import { showDevelopingTips } from '../../common/dev'
-import { privacyNoteDB } from '../../database/PrivacyDB'
+import { privacyNoteDB, privacyRecorderDB } from '../../database/PrivacyDB'
 import { userAuthManager } from '../../manager'
 
 interface Item {
@@ -43,17 +43,31 @@ struct PrivacySettingsPage {
   ]
 
   onPageShow(): void {
-    this.getNoteCount()
+    this.getCount()
   }
 
-  // 获取笔记数量
-  async getNoteCount() {
-    this.list[1] = {
-      icon: $r('app.media.ic_notebook'),
-      name: '笔记',
-      count: await privacyNoteDB.queryCount(),
-      url: 'pages/Privacy/Note/NoteIndexPage'
-    }
+  // 获取录音、笔记、密码本数量
+  async getCount() {
+    this.list = [
+      {
+        icon: $r('app.media.ic_recorder'),
+        name: '录音',
+        count: await privacyRecorderDB.queryCount(),
+        url: 'pages/Privacy/Recorder/RecorderIndexPage'
+      },
+      {
+        icon: $r('app.media.ic_notebook'),
+        name: '笔记',
+        count: await privacyNoteDB.queryCount(),
+        url: 'pages/Privacy/Note/NoteIndexPage'
+      },
+      {
+        icon: $r('app.media.ic_password_notebook'),
+        name: '密码本',
+        count: 0,
+        url: 'pages/Privacy/Codebook/CodebookIndexPage'
+      },
+    ]
   }
 
   // 设置改变时执行

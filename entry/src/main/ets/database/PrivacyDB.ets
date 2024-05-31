@@ -53,6 +53,7 @@ const pushRecorderData = (list: PrivacyRecorderDBInfo[], resultSet: relationalSt
 }
 
 class PrivacyDB <T extends ValuesBucket> {
+  private store: relationalStore.RdbStore | null = null // 数据库实例
   private tableName: string // 表名
   private sqlCreate: string // sql 创建语句
   private pushData: (list: T[], resultSet: relationalStore.ResultSet) => void
@@ -65,31 +66,21 @@ class PrivacyDB <T extends ValuesBucket> {
     this.pushData = pushData
   }
 
-  // 获取数据库
+  // 获取(创建)数据库
   async getStoreInstance() {
     try {
-      const store = await relationalStore.getRdbStore(getContext(), {
-        name: this.tableName + '.db', // 数据库文件名
-        securityLevel: relationalStore.SecurityLevel.S1 // 数据库安全级别
-      })
-      return store
-    } catch (err) {
-      promptAction.showToast({ message: `获取失败，err：${err || ''}` })
-      return Promise.reject(err)
-    }
-  }
-
-  // 创建数据库
-  async createStore() {
-    try {
+      if (this.store) {
+        return this.store
+      }
       const store = await relationalStore.getRdbStore(getContext(), {
         name: this.tableName + '.db', // 数据库文件名
         securityLevel: relationalStore.SecurityLevel.S1 // 数据库安全级别
       })
       await store.executeSql(this.sqlCreate)
-      return store
+      this.store = store
+      return this.store
     } catch (err) {
-      promptAction.showToast({ message: `创建失败，err：${err || ''}` })
+      promptAction.showToast({ message: `获取数据库失败，err：${err || ''}` })
       return Promise.reject(err)
     }
   }
@@ -98,8 +89,9 @@ class PrivacyDB <T extends ValuesBucket> {
   async deleteStore() {
     try {
       await relationalStore.deleteRdbStore(getContext(), this.tableName + '.db')
+      this.store = null
     } catch {
-      promptAction.showToast({ message: '删除失败' })
+      promptAction.showToast({ message: '删除数据库失败' })
     }
   }
 
