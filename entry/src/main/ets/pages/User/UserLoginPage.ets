@@ -1,5 +1,7 @@
-import { BASE_URL, LOGIN_INFO, LoginInfoResponse } from '../../common/constants'
-
+import { promptAction, router } from '@kit.ArkUI'
+import { BizType, codeGraphicCheckAPI, codeSmsSendAPI } from '../../api/codeAPI'
+import { LoginInfoResponse, postUserLoginVerifyCodeAPI } from '../../api/userAPI'
+import { BASE_URL, LOGIN_INFO } from '../../common/constants'
 
 @Entry
 @Component
@@ -7,7 +9,7 @@ struct UserLoginPage {
   // 用户信息持久化
   @StorageLink(LOGIN_INFO) loginInfo: LoginInfoResponse = {}
   // 手机号
-  @State phoneNumber: string = '131234567890'
+  @State phoneNumber: string = '151730771851'
   // 短信验证码
   @State verifyCode: string = ''
   // 显示半模态转场结构
@@ -19,7 +21,58 @@ struct UserLoginPage {
   // 倒计时数值
   @State count: number = 0
   // 倒计时定时器
-  private intervalID: number = -1
+  private timerId: number = -1
+
+  // 校验图形验证码
+  async onCheckGraphicCode() {
+    try {
+      await codeGraphicCheckAPI({
+        bizType: BizType.PhoneLogin,
+        phone: this.phoneNumber,
+        verifyCode: this.graphicCode // 输入1234即可
+      })
+      // 校验正确，发送短信验证码
+      this.onSendSmsCode()
+      // 关闭半模态
+      this.isShowSheet = false
+    } catch (err) {
+      this.timestamp = Date.now()
+    }
+  }
+
+  // 发送短信验证码
+  async onSendSmsCode() {
+    await codeSmsSendAPI({
+      bizType: BizType.PhoneLogin,
+      phone: this.phoneNumber
+    })
+    // 发送成功
+    promptAction.showToast({ message: '验证码发送成功' })
+    // 重发倒计时
+    this.startCountDown()
+  }
+
+  // 开始倒计时
+  startCountDown() {
+    this.count = 120
+    this.timerId = setInterval(() => {
+      this.count--
+      if (this.count <= 0) {
+        clearInterval(this.timerId)
+      }
+    }, 1000)
+  }
+
+  // 登录提交
+  async onLoginSubmit() {
+    const resData = await postUserLoginVerifyCodeAPI({
+      phone: this.phoneNumber,
+      verifyCode: this.verifyCode // 输入123456即可
+    })
+    promptAction.showToast({ message: '登录成功' })
+    this.loginInfo = resData
+    router.back()
+  }
 
   // 半模态转场
   @Builder
@@ -42,8 +95,9 @@ struct UserLoginPage {
             })
             .onSubmit(() => {
               // TODO:提交图形验证码
+              this.onCheckGraphicCode()
             })
-          Image(`${BASE_URL}/code/graphic?phone=${this.phoneNumber}&bizType=${1}&timestamp=${this.timestamp}`)
+          Image(`${BASE_URL}/code/graphic?phone=${this.phoneNumber}&bizType=${BizType.PhoneLogin}&timestamp=${this.timestamp}`)
             .width(108)
             .height(42)
             .objectFit(ImageFit.Contain)
@@ -59,6 +113,7 @@ struct UserLoginPage {
           .enabled(this.graphicCode.length > 0)
           .onClick(() => {
             // TODO:提交图形验证码
+            this.onCheckGraphicCode()
           })
       }
     }
@@ -128,6 +183,7 @@ struct UserLoginPage {
             .enabled(this.phoneNumber.length > 0 && this.verifyCode.length > 0)
             .onClick(() => {
               // TODO:登录表单提交
+              this.onLoginSubmit()
             })
 
           Text('仅用于IT培训教学使用，为保障您的个人信息安全请勿向平台录入任何个人敏感信息（如手机号、身份证号等）！')
