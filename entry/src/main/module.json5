@@ -11,6 +11,9 @@
     "installationFree": false,
     "pages": "$profile:main_pages",
     "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET"
+      },
       // 权限级别：normal (对所有应用开放)
       // 授权方式：system_grant （直接授权）
       {

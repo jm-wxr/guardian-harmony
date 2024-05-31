@@ -1,9 +1,10 @@
-import { router } from '@kit.ArkUI'
-import { LOGIN_INFO, LoginInfoResponse } from '../../common/constants'
-import { batteryInfo, deviceInfo } from '@kit.BasicServicesKit'
-import { hidebug } from '@kit.PerformanceAnalysisKit'
 import { appManager } from '@kit.AbilityKit'
+import { router } from '@kit.ArkUI'
+import { batteryInfo, deviceInfo } from '@kit.BasicServicesKit'
 import { statfs } from '@kit.CoreFileKit'
+import { hidebug } from '@kit.PerformanceAnalysisKit'
+import { LoginInfoResponse } from '../../api/userAPI'
+import { LOGIN_INFO } from '../../common/constants'
 
 interface UsageItem {
   icon: Resource
@@ -44,23 +45,27 @@ export struct MyTabsComp {
   }
 
   // 获取设备名称，模拟器为emulator
-  getDeviceName () {
+  getDeviceName() {
     this.deviceName = deviceInfo.marketName
   }
+
   // 获取进程CPU占用率
   getCpuUsage() {
     this.cpuUsage = hidebug.getCpuUsage() * 100
   }
+
   // 获取应用内存大小
   async getAppMemorySize() {
     this.memorySize = await appManager.getAppMemorySize()
   }
+
   // 获取剩余存储
   getStatfsSize() {
     const context = getContext()
     // 字节数转GB，1GB = 1000MB，1MB = 1000KB，1KB = 1000B
-    this.statfsFreeSize = statfs.getFreeSizeSync(context.filesDir) /(1000*1000*1000)
+    this.statfsFreeSize = statfs.getFreeSizeSync(context.filesDir) / (1000 * 1000 * 1000)
   }
+
   // 获取系统电量
   getBatteryState() {
     this.batteryState = batteryInfo.batterySOC

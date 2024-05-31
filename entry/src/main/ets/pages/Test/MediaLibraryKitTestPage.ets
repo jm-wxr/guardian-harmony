@@ -13,7 +13,7 @@ struct MediaLibraryKitTestPage {
   build() {
     Navigation() {
       Scroll() {
-        Column({}) {
+        Column({ space: 10 }) {
           Flex({ wrap: FlexWrap.Wrap }) {
             Button('获取相册权限')
               .onClick(() => {
@@ -55,8 +55,9 @@ struct MediaLibraryKitTestPage {
                 .width(100)
               Column() {
                 Text('图片大小：' + (item.get('size') as number / KILO_BYTE).toFixed(2) + 'kb')
-                Text('图片添加时间：' + (item.get('date_added') as number ? dayjs(item.get('date_added') as number * 1000)
-                  .format('YYYY-MM-DD HH:mm:ss') : ''))
+                Text('图片添加时间：' +
+                  (item.get('date_added') as number ? dayjs(item.get('date_added') as number * 1000)
+                    .format('YYYY-MM-DD HH:mm:ss') : ''))
                 Text('图片宽度：' + item.get('width'))
                 Text('图片高度：' + item.get('height'))
               }

@@ -6,9 +6,9 @@
         "type": "HarmonyOS",
         "material": {
           "certpath": "/Users/ming_mac/.ohos/config/default_hm_guardian_k3B5hZXTFcttpcy359EUGxIwgPWqydddrsukrhCG2Rw=.cer",
-          "storePassword": "0000001B3210A158929810E2E0F0F2F31ACB61689E6A58F2964D33467FD0BCAAE1D0F4832F46EC7C31885A",
+          "storePassword": "0000001BD7D813398A311E5FC6DA53A651691A0DFE6466B9D844EA7F7666C09279A9BAF0A4B63A6883EFCF",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B0B557C2E42ACE5795BF3AD33C440176DD1F3B2C4697A98CCAC9D4A66DCE44937017A443D7B1EC5",
+          "keyPassword": "0000001B1C03DD6A4B760FAF27444442E0D954DCB26E61D88C771423FEE8A20E2C80CD2E7CAB5259CE77D9",
           "profile": "/Users/ming_mac/.ohos/config/default_hm_guardian_k3B5hZXTFcttpcy359EUGxIwgPWqydddrsukrhCG2Rw=.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "/Users/ming_mac/.ohos/config/default_hm_guardian_k3B5hZXTFcttpcy359EUGxIwgPWqydddrsukrhCG2Rw=.p12"

@@ -45,6 +45,7 @@
     "pages/Test/PermissionTestPage",
     "pages/Test/MediaLibraryKitTestPage",
     "pages/Test/UserAuthTestPage",
-    "pages/Test/RdbStoreTestPage"
+    "pages/Test/RdbStoreTestPage",
+    "pages/Test/FaultLogTestPage"
   ]
 }
