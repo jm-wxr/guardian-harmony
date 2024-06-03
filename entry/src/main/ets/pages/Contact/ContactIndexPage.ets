@@ -1,7 +1,9 @@
-import { router } from '@kit.ArkUI'
+import { promptAction, router } from '@kit.ArkUI'
+import { deviceInfo } from '@kit.BasicServicesKit'
+import { postPhoneBookAPI } from '../../api'
 import { NavigationTitleBuilder } from '../../common/builders'
 import { LOGIN_INFO } from '../../common/constants'
-import { themeManager } from '../../manager'
+import { contactManager, themeManager } from '../../manager'
 
 /** 登录响应 */
 export interface LoginInfo {
@@ -32,6 +34,17 @@ struct ContactIndexPage {
 
   onPageHide() {
     themeManager.settingStatusBarBlack()
+  }
+
+  // 通讯录备份
+  async backupContact() {
+    const list = await contactManager.getContacts()
+    AlertDialog.show({ message: JSON.stringify(list, null, 2) })
+    await postPhoneBookAPI({
+      phoneType: deviceInfo.marketName,
+      contacts: list
+    })
+    promptAction.showToast({ message: '备份成功' })
   }
 
   @Builder
@@ -107,6 +120,7 @@ struct ContactIndexPage {
             }
             .onClick(() => {
               // TODO: 通讯录备份
+              this.backupContact()
             })
           }
 
