@@ -11,8 +11,21 @@
     "installationFree": false,
     "pages": "$profile:main_pages",
     "requestPermissions": [
+      // 申请长时任务（后台任务）
+      {
+        "name": "ohos.permission.KEEP_BACKGROUND_RUNNING"
+      },
+      // 网络
       {
         "name": "ohos.permission.INTERNET"
+      },
+      // 加速度传感器
+      {
+        "name": "ohos.permission.ACCELEROMETER"
+      },
+      // 马达
+      {
+        "name": "ohos.permission.VIBRATE"
       },
       // 权限级别：normal (对所有应用开放)
       // 授权方式：system_grant （直接授权）

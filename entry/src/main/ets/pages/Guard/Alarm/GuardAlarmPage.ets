@@ -1,4 +1,6 @@
-import { themeManager } from '../../../manager'
+import { router } from '@kit.ArkUI'
+import { camera } from '@kit.CameraKit'
+import { avPlayerManager, backgroundRunningManager, themeManager } from '../../../manager'
 
 @Entry
 @Component
@@ -14,6 +16,30 @@ struct GuardAlarmPage {
 
   onPageHide() {
     themeManager.settingStatusBarBlack()
+  }
+
+  aboutToAppear(): void {
+    this.playAlarm()
+    // 申请后台任务
+    backgroundRunningManager.startBackgroundRunning()
+  }
+
+  aboutToDisappear(): void {
+    this.stopAlarm()
+    // 停止后台任务
+    backgroundRunningManager.stopBackgroundRunning()
+  }
+
+  // 播放警报声-循环播放
+  playAlarm() {
+    avPlayerManager.setLoop(true) // 设置循环
+    avPlayerManager.playByRawSrc('lab_alarm.wav') // 播放
+  }
+
+  // 关闭警报声
+  stopAlarm() {
+    avPlayerManager.setLoop(false) // 关闭循环
+    avPlayerManager.stop() // 停止播放
   }
 
   build() {
@@ -51,6 +77,26 @@ struct GuardAlarmPage {
 
         // 底部按钮
         Column() {
+          Button('开闪光灯(手电筒模式)')
+            .onClick(() => {
+              // 获取相机管理器
+              const cameraManager = camera.getCameraManager(getContext())
+              // 检测是否支持手电筒模式
+              if (cameraManager.isTorchSupported()) {
+                // 开启手电筒模式
+                cameraManager.setTorchMode(camera.TorchMode.ON)
+              }
+            })
+          Button('关闪光灯(手电筒模式)')
+            .onClick(() => {
+              // 获取相机管理器
+              const cameraManager = camera.getCameraManager(getContext())
+              // 检测是否支持手电筒模式
+              if (cameraManager.isTorchSupported()) {
+                // 关闭手电筒模式
+                cameraManager.setTorchMode(camera.TorchMode.OFF)
+              }
+            })
           Button('结束警报')
             .type(ButtonType.Normal)
             .borderRadius(10)
@@ -59,6 +105,8 @@ struct GuardAlarmPage {
             .backgroundColor('#fff')
             .onClick(() => {
               // TODO: 结束警报
+              this.stopAlarm()
+              router.back()
             })
         }
         .padding({ left: 20, right: 20, bottom: 30 })

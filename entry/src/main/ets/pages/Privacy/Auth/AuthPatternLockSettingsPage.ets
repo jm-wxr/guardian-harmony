@@ -1,4 +1,5 @@
 import { promptAction, router } from '@kit.ArkUI'
+import { vibrator } from '@kit.SensorServiceKit'
 import { PRIVACY_SETTINGS, PrivacySettings } from '../../../common/constants'
 import { encryptMD5 } from '../../../common/utils'
 
@@ -104,6 +105,10 @@ struct AuthPatternLockSettingsPage {
           .onDotConnect(() => {
             // 按下首点时清除错误消息
             this.clearErrorMessage()
+            vibrator.startVibration(
+              { type: 'preset', count: 1, effectId: 'haptic.clock.timer' },
+              { id: 1, usage: 'touch' }
+            )
           })
           .onPatternComplete((input: number[]) => {
             // TODO：密码输入结束时触发该回调

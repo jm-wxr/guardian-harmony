@@ -1,6 +1,6 @@
 import { router } from '@kit.ArkUI'
 import dayjs from 'dayjs'
-import { themeManager } from '../../../manager'
+import { avPlayerManager, themeManager } from '../../../manager'
 
 interface ButtonItem {
   name: string
@@ -28,6 +28,39 @@ struct FakeTelPage {
 
   onPageHide() {
     themeManager.settingStatusBarBlack()
+  }
+
+  aboutToAppear(): void {
+    avPlayerManager.setLoop(true)
+    avPlayerManager.playByRawSrc('lab_call_ring.mp3')
+  }
+
+  aboutToDisappear(): void {
+    avPlayerManager.setLoop(false)
+    avPlayerManager.stop()
+    this.stopCounter()
+  }
+
+  // 模拟接听电话
+  answerCall() {
+    this.isAnswering = true // 切换到接听界面
+    avPlayerManager.playByRawSrc('lab_voice_trick_5.m4a')
+    avPlayerManager.setLoop(false)
+    this.startCounter()
+  }
+
+  // 开始计时
+  startCounter() {
+    this.count = 0
+    clearInterval(this.intervalID)
+    this.intervalID = setInterval(() => {
+      this.count++
+    }, 1000)
+  }
+
+  // 停止计时
+  stopCounter() {
+    clearInterval(this.intervalID)
   }
 
   build() {
@@ -119,6 +152,7 @@ struct FakeTelPage {
               }
               .onClick(() => {
                 // TODO: 接听
+                this.answerCall()
               })
             }
             .width('100%')

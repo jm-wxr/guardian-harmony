@@ -18,6 +18,63 @@ struct IndoorCheckMovePage {
     .borderRadius(150 / 2)
   }
 
+  aboutToAppear(): void {
+    this.startSensor()
+  }
+
+  aboutToDisappear(): void {
+    this.stopSensor()
+  }
+
+  // 检测移动，比较前后传感器数据
+  checkStatic(val: sensor.AccelerometerResponse, oldVal: sensor.AccelerometerResponse) {
+    return (
+      Math.abs(val.x - oldVal.x) <= 1 &&
+        Math.abs(val.y - oldVal.y) <= 1 &&
+        Math.abs(val.z - oldVal.z) <= 1
+    )
+  }
+
+  // 订阅传感器
+  startSensor() {
+    try {
+      // 订阅加速度传感器
+      sensor.on(sensor.SensorId.ACCELEROMETER, (data) => {
+        if (this.sensorResponse === null) {
+          // 记录初始值
+          this.sensorResponse = data
+          return
+        }
+        if (this.checkStatic(data, this.sensorResponse)) {
+          // 静的情况
+          this.isStatic = true
+        } else {
+          // 动的情况，静->动
+          if (this.isStatic === true) {
+            // 停止传感器
+            this.stopSensor()
+            router.replaceUrl({ url: 'pages/Guard/Alarm/GuardAlarmPage' })
+          }
+          this.isStatic = false
+        }
+        // 保存数据
+        this.sensorResponse = data
+        // 'game' 触发频率高
+      }, { interval: 'game' })
+    } catch (err) {
+      AlertDialog.show({ message: '手机硬件不支持' })
+    }
+  }
+
+  // 取消订阅传感器
+  stopSensor() {
+    try {
+      sensor.off(sensor.SensorId.ACCELEROMETER)
+    } catch (err) {
+      AlertDialog.show({ message: '手机硬件不支持' })
+    }
+  }
+
   build() {
     Navigation() {
       Stack({ alignContent: Alignment.Bottom }) {
@@ -68,8 +125,8 @@ struct IndoorCheckMovePage {
             .fontColor($r('app.color.brand'))
           Text('保持手机静止，以激活防移动模式')
             .fontSize(14)
-          // Text('是否静止：' + this.isStatic)
-          // Text('传感器数据：' + JSON.stringify(this.sensorResponse))
+          Text('是否静止：' + this.isStatic)
+          Text('传感器数据：' + JSON.stringify(this.sensorResponse))
         }
         .justifyContent(FlexAlign.Center)
         .height('100%')

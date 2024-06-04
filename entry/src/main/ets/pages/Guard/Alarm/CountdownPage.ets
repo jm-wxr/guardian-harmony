@@ -6,6 +6,37 @@ struct CountdownPage {
   @State count: number = 0
   private intervalID: number = -1
 
+  aboutToAppear() {
+    this.startCounter()
+  }
+
+  aboutToDisappear() {
+    this.stopCounter()
+  }
+
+  // 开启倒计时
+  startCounter() {
+    // 初始化倒计时的值
+    this.count = 5
+    // 开启定时器
+    this.intervalID = setInterval(() => {
+      // 自减
+      this.count--
+      // 倒计时结束
+      if (this.count <= 0) {
+        // 停止定时器
+        this.stopCounter()
+        // 跳转页面
+        router.replaceUrl({ url: 'pages/Guard/Alarm/GuardAlarmPage' })
+      }
+    }, 1000)
+  }
+
+  // 结束倒计时
+  stopCounter() {
+    clearInterval(this.intervalID)
+  }
+
   build() {
     Navigation() {
       Stack({ alignContent: Alignment.Bottom }) {

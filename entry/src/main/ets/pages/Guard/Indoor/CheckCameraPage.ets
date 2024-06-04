@@ -1,4 +1,5 @@
-import { sensor } from '@kit.SensorServiceKit'
+import { promptAction } from '@kit.ArkUI'
+import { sensor, vibrator } from '@kit.SensorServiceKit'
 import { NavigationTitleBuilder } from '../../../common/builders/index'
 import { themeManager } from '../../../manager/index'
 
@@ -20,6 +21,57 @@ struct CheckCameraPage {
 
   onPageHide() {
     themeManager.settingStatusBarBlack()
+  }
+
+  aboutToAppear(): void {
+    this.startSensor()
+  }
+
+  aboutToDisappear(): void {
+    this.stopSensor()
+  }
+
+  // 启动传感器监听
+  startSensor() {
+    try {
+      // 磁场传感器
+      sensor.on(sensor.SensorId.MAGNETIC_FIELD, (response) => {
+        this.sensorResponse = response
+        // 获取传感器 x,y,z 轴的最大值
+        this.maxData = Math.max(Math.abs(response.x), Math.abs(response.y), Math.abs(response.z))
+        // 把最大值加到数组
+        this.dataList.push(this.maxData)
+        this.scroller.scrollEdge(Edge.End)
+        // 警报阈值
+        if (this.maxData >= this.alarmValue) {
+          this.startVibrate()
+        } else {
+          this.stopVibrate()
+        }
+        // 上报频率 interval: 'game > 'ui' > 'normal
+      }, { interval: 'ui' })
+    } catch (err) {
+      promptAction.showToast({ message: '硬件不支持' })
+    }
+  }
+
+  // 停止传感器
+  stopSensor() {
+    try {
+      sensor.off(sensor.SensorId.MAGNETIC_FIELD)
+    } catch (err) {
+      promptAction.showToast({ message: '硬件不支持' })
+    }
+  }
+
+  // 开启马达振动
+  startVibrate() {
+    vibrator.startVibration({ type: 'time', duration: 500}, {id: 1, usage: 'alarm'})
+  }
+
+  // 关闭马达振动
+  stopVibrate() {
+    vibrator.stopVibration(vibrator.VibratorStopMode.VIBRATOR_STOP_MODE_TIME)
   }
 
   build() {
